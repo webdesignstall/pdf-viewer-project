@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 import Draggable from 'react-draggable'
 import { Document, Page } from 'react-pdf'
 import { pdfjs } from 'react-pdf'
+import { log } from 'util'
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
 
 interface FieldData {
@@ -96,7 +97,6 @@ export const PDFViewer = () => {
   }
 
   const handleDragOver = (event, ui) => {
-    console.log('drag over', event)
     event.preventDefault()
   }
 
@@ -123,14 +123,14 @@ export const PDFViewer = () => {
       const x = event.clientX - rect.left - cursorLocation.x
       const y = event.clientY - rect.top - cursorLocation.y
 
-
-
       if (draggingItem && status === 'drag') {
         const partyId = draggingItem.partyId
         const color = partyIconColors[partyId - 1]
         const updatedParties = [...parties]
         const party = updatedParties.find((party) => party.partyId === draggingItem.partyId)
-        console.log('draggingItem', partyFieldId)
+
+
+
         if (party) {
           party.fields.push({
             fieldName: draggingItem.fieldName,
@@ -148,13 +148,35 @@ export const PDFViewer = () => {
 
         setParties(updatedParties)
         setDraggingItem(null)
+
+       const field =  party?.fields?.length > 1 ? party?.fields[party?.fields.length - 1] : party?.fields[0];
+
+        const elementId = convertToSlug(field?.fieldName+field?.partyFieldId);
+
+        setPosition((prevPositions) => {
+          const existingIndex = prevPositions.findIndex((item) => item.element === elementId);
+
+          if (existingIndex !== -1) {
+            // If the element already exists, update its x and y values
+            const updatedPositions = [...prevPositions];
+            updatedPositions[existingIndex] = { ...updatedPositions[existingIndex], x, y };
+            return updatedPositions;
+          } else {
+            // If the element doesn't exist, add a new element
+            return [...prevPositions, { x, y, element: elementId }];
+          }
+        });
+
       } else if (status === 're-drag') {
         const updatedParties = [...parties]
         const party = updatedParties.find((party) => party.partyId === partyId)
 
         if (party) {
           const updatedFields = party.fields.map((item) =>
-            item.partyFieldId === partyFieldId ? { ...item, location: { x, y }, pageNumber: pageNumber } : item
+          {
+            return item.partyFieldId === partyFieldId ? { ...item, location: { x, y }, pageNumber: pageNumber } : item
+          }
+
           )
 
           party.fields = updatedFields
@@ -199,16 +221,6 @@ export const PDFViewer = () => {
   function nextPage() {
     changePage(1)
   }
-  /*const handleDrag = (event) => {
-    console.log({
-      x: event.clientX,
-      y: event.clientY,
-      element: event.srcElement.id,
-    });
-  };*/
-
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
 
   const handleDrag = (e, ui) => {
@@ -230,31 +242,16 @@ export const PDFViewer = () => {
     });
   };
 
-  const onMouseDown = (e) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-  };
-
-  const onMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const onStop = (e, ui)=> {
-    console.log('on stop', e)
-  }
-
-  useEffect(() => {
-    // Save the current position to local storage whenever it changes
-    localStorage.setItem('draggablePosition', JSON.stringify(position));
-  }, [position]);
-
-
-  const handleDrag2 = (event) => {
-
-  };
 
 const saveData = ()=>{
-  console.log(position)
+
+  const data = {
+    scale,
+    position
+  }
+
+  console.log(data);
+
 }
 
 
@@ -324,7 +321,7 @@ const saveData = ()=>{
                               const scaledX = location?.x
                               const scaledY = location?.y
                               return (
-                                <Draggable onDrag={handleDrag} onStart={onMouseDown} onStop={onMouseUp} bounds='parent' key={`${party.partyId}-${fieldItem.partyFieldId}`}>
+                                <Draggable onDrag={handleDrag} bounds='parent' key={`${party.partyId}-${fieldItem.partyFieldId}`}>
                                   <div
                                     ref={dragItemRef}
                                     style={{
