@@ -37,12 +37,14 @@ const party = {
   ],
 }
 
+// New code start
 function convertToSlug(str) {
   return str
     .toLowerCase()
     .replace(/ /g, '-') // Replace spaces with dashes
     .replace(/[^a-zA-Z0-9-]/g, ''); // Remove non-alphanumeric characters except dashes
 }
+// New code end
 
 export const PDFViewer = () => {
   const [selectedFile, setSelectedFile] = useState(null)
