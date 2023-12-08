@@ -54,8 +54,9 @@ export const PDFViewer = () => {
   const [draggingItem, setDraggingItem] = useState(null)
   const dragItemRef = useRef(null)
 
-  const storedPosition = [];
-  const [position, setPosition] = useState(storedPosition);
+  // New code start
+  const [position, setPosition] = useState([]);
+  // New code end
 
   // const [coords, setCoords] = useState({ x: 0, y: 0 })
   const [coords, setCoords] = useState([]);
@@ -66,8 +67,7 @@ export const PDFViewer = () => {
     const handleWindowMouseMove = (event) => {
       setCoords({
         x: event.clientX,
-        y: event.clientY,
-        target: event.target
+        y: event.clientY
       })
     }
     window.addEventListener('mousemove', handleWindowMouseMove)
@@ -149,8 +149,8 @@ export const PDFViewer = () => {
         setParties(updatedParties)
         setDraggingItem(null)
 
-       const field =  party?.fields?.length > 1 ? party?.fields[party?.fields.length - 1] : party?.fields[0];
-
+        // New code start
+        const field =  party?.fields?.length > 1 ? party?.fields[party?.fields.length - 1] : party?.fields[0];
         const elementId = convertToSlug(field?.fieldName+field?.partyFieldId);
 
         setPosition((prevPositions) => {
@@ -166,6 +166,7 @@ export const PDFViewer = () => {
             return [...prevPositions, { x, y, element: elementId }];
           }
         });
+        // New code End
 
       } else if (status === 're-drag') {
         const updatedParties = [...parties]
@@ -173,9 +174,9 @@ export const PDFViewer = () => {
 
         if (party) {
           const updatedFields = party.fields.map((item) =>
-          {
-            return item.partyFieldId === partyFieldId ? { ...item, location: { x, y }, pageNumber: pageNumber } : item
-          }
+            {
+              return item.partyFieldId === partyFieldId ? { ...item, location: { x, y }, pageNumber: pageNumber } : item
+            }
 
           )
 
@@ -192,9 +193,9 @@ export const PDFViewer = () => {
       prevParties.map((party) =>
         party.partyId === partyId
           ? {
-              ...party,
-              fields: party.fields.filter((field) => field.partyFieldId !== partyFieldId),
-            }
+            ...party,
+            fields: party.fields.filter((field) => field.partyFieldId !== partyFieldId),
+          }
           : party
       )
     )
@@ -223,6 +224,7 @@ export const PDFViewer = () => {
   }
 
 
+  // New code start
   const handleDrag = (e, ui) => {
     const { x, y } = ui;
     const elementId = convertToSlug(ui.node.id);
@@ -241,18 +243,20 @@ export const PDFViewer = () => {
       }
     });
   };
+  // New code End
 
+// New code start
+  const saveData = ()=>{
 
-const saveData = ()=>{
+    const data = {
+      scale,
+      position
+    }
 
-  const data = {
-    scale,
-    position
+    console.log(data);
+
   }
-
-  console.log(data);
-
-}
+  // New code End
 
 
   return (
@@ -321,6 +325,7 @@ const saveData = ()=>{
                               const scaledX = location?.x
                               const scaledY = location?.y
                               return (
+                                 // New code add - onDrag={handleDrag}
                                 <Draggable onDrag={handleDrag} bounds='parent' key={`${party.partyId}-${fieldItem.partyFieldId}`}>
                                   <div
                                     ref={dragItemRef}
@@ -330,16 +335,15 @@ const saveData = ()=>{
                                       transform: `scale(${scale}) translate(-50%, -50%)`,
                                     }}
                                     className={`absolute flex items-center gap-x-1`}
+                                    // New code add -  id={fieldItem.fieldName + fieldItem.partyFieldId }
                                     id={fieldItem.fieldName + fieldItem.partyFieldId }
                                   >
                                     <div
                                       className={`flex h-6 w-44 cursor-move items-center gap-x-2 border border-primary  bg-gray-100 pl-3 text-sm`}
                                       onClick={() => {}}
-                                      id={fieldItem.fieldName}
                                     >
                                       <div
                                         className={`flex h-6 w-8 items-center ${color} justify-center  text-center text-white`}
-                                        id={fieldItem.fieldName}
 
                                       ></div>
                                       {fieldItem.fieldName}
@@ -403,7 +407,7 @@ const saveData = ()=>{
             </div>
           </div>
         )}
-
+        {/*New code add - save button*/}
         <button className='bg-green-400 rounded p-2' onClick={saveData}>Save</button>
       </div>
 
